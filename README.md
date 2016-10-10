@@ -40,27 +40,78 @@ class Author(SoftDeleteModel):
 
 
 class Article(SoftDeleteModel):
-    title = models.CharField(max_length=100)
-    body = models.TextField()
-    author = models.models.ForeignKey(Author, on_delete=models.CASCADE, related_name='articles')
+    title = models.CharField(max_length=50)
+    body = models.TextField(null=True)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='articles')
 
 
-a1 = Author.objects.create(name='Bob', dob='2000-1-2')
-a2 = Author.objects.create(name='John', dob='1990-10-15')
+Bob = Author.objects.create(name='bob', dob='5-5-80')
+John = Author.objects.create(name='john', dob='5-5-80')
 
 Author.objects.all() # return QuerySet with 2 objects
-a1.delete() # a1 is soft-deleted
-Author.objects.all() # return QuerySet with 1 object, a2
-Author.all_objects.all() # return QuerySet with 2 object, a1 and a2
-a1.undelete() # un-deletes a1 object
+Bob.delete() # Bob is soft-deleted
+Author.objects.all() # return QuerySet with 1 object, John
+Author.all_objects.all() # return QuerySet with 2 object, Bob and John
+Bob.undelete() # un-deletes Bob object
 Author.objects.all() # return QuerySet with 2 objects
 
-article1 = Article.objects.create(title='Bob The Builder')
-article1.author = a1
+
+article1 = Article(title='Bob The Builder', body='')
+article1.author = Bob
+article1.save()
+
 Article.objects.all() # return QuerySet with 1 object, article1
 
-a1.delete() # soft-deletes both a1 and article1 as Article's author field is on_delete_cascade and it Inherits SoftDeleteModel
+Bob.delete() # soft-deletes both Bob and article1 as Article's author field is on_delete_cascade and it Inherits SoftDeleteModel
 
-Article.all_objects.all() # returns QuerySet containing article objects both soft-deleted and unsoft-deleted
-Article.all_objects.get(title='Bob The Builder').undelete()
+```
+
+If you are implementing a new `Manager`  for a model, simply inherit `SoftDeleteManager` as well along with other Managers.
+
+If you are implementing a new `QuerySet` for a model, you will need to do following:
+    1. Inherit `SoftDeleteQuerySet`
+    2. Write Manager inheriting `SoftDeleteManager` which defines soft-delete functionality in it's `__init__()` method(as in the example) and override `get_queryset()` method(as in the example)
+    3. Write model class inheriting `SoftDeleteModel` and uses above new defined `Manager` method(as in the example)
+
+### Example
+
+Lets create a QuerySet for Article such that if no author is provided while creating a new article, one default author will be added in object.
+
+```
+#Creating a default author object first
+default_author = Author.objects.create(name='default')
+
+#Implementing QuerySet
+from soft_delete_it.models import SoftDeleteModel, SoftDeleteQuerySet, SoftDeleteManager
+
+class ArticleQuerySet(SoftDeleteQuerySet):
+
+    def create(self, **kwargs):
+        try:
+            author = kwargs['author']
+        except KeyError:
+            kwargs['author'] = Author.objects.get(name='default')
+        article = super(ArticleQuerySet, self).create(**kwargs)
+        return article
+
+class ArticleManager(SoftDeleteManager):
+
+    def __init__(self, *args, **kwargs):
+        self.deleted_also = kwargs.get('deleted_also', False)
+        super(ArticleManager, self).__init__(*args, **kwargs)
+
+    def get_queryset(self):
+        '''return all unsoft-deleted objects'''
+        if self.deleted_also:
+            return ArticleQuerySet(self.model)
+        return ArticleQuerySet(self.model).filter(deleted=None)
+
+class Article(SoftDeleteModel):
+    title = models.CharField(max_length=50)
+    body = models.TextField(null=True)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='articles')
+
+    objects = ArticleManager.from_queryset(ArticleQuerySet)()
+    all_objects = ArticleManager.from_queryset(ArticleQuerySet)(deleted_also=True)
+
 ```
