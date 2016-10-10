@@ -115,3 +115,15 @@ class Article(SoftDeleteModel):
     all_objects = ArticleManager.from_queryset(ArticleQuerySet)(deleted_also=True)
 
 ```
+
+## How soft-deletion functionality is implemented:
+
+1. Create a new soft_delete app, whole code for soft-deletion functionality is implemented in its models.py file.
+2. An abstract `SoftDeleteModel` added which contains a `deleted` attribuate which is a BooleanField. It will hold `False` for undeleted object and `True` for deleted objects.
+3. `SoftDeleteQuerySet` implemented to override default django's `delete` method to `soft-delete` objects instead of hard deleting them.
+4. `undelete()`, `hard_delete()`, `only_deleted()` methods are implemented in same QuerySet class to provide extra features.
+5. `SoftDeleteManger` implemented to use above QuerySet by overriding `get_queryset()` method.
+6. QuerySet's delete method is necessary to override to support `bulk_delete` feature.
+7. Call pre_delete and post_delete signals before and after the definition of above delete method.
+8. Use NestedObjects from django admin utils[3] to soft-delete all related objects.
+9. Two managers, objects and all_objects to return undeleted, all objects are implemented.
