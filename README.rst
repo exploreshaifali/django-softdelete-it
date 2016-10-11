@@ -9,7 +9,7 @@ Quick start
 
 Follow steps mentioned below to add ``soft-delete`` feature in any model of your django app.
 
-1. pip install django-softdelete-it
+1. ``pip install django-softdelete-it``
 2. Add ``soft_delete_it`` to your INSTALLED_APPS setting like this: ::
 
         INSTALLED_APPS = [
@@ -19,10 +19,11 @@ Follow steps mentioned below to add ``soft-delete`` feature in any model of your
 3. Import ``SoftDeleteModel`` from soft_delete_it app to your model file like this: ::
 
       from soft_delete_it import SoftDeleteModel
+
 4. Inherit ``SoftDeleteModel`` class to your model class. It will add following features:
     - ``objects`` manager's behavior will change such that:
         - ``delete()`` method which will soft delete instances
-        - will always return  return only 'non soft deleted' objects
+        - will always return only 'non soft deleted' objects
         - ``hard_delete()``` method to hard delete the objects
     - ``all_objects`` manager:
         - will always return both soft deleted and non soft deleted objects
@@ -49,8 +50,8 @@ Example
         author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='articles')
 
 
-    Bob = Author.objects.create(name='bob', dob='5-5-80')
-    John = Author.objects.create(name='john', dob='5-5-80')
+    Bob = Author.objects.create(name='bob', dob='2000-12-12')
+    John = Author.objects.create(name='john', dob='1990-10-12')
 
     Author.objects.all() # return QuerySet with 2 objects
     Bob.delete() # Bob is soft-deleted
@@ -124,8 +125,8 @@ How soft-deletion functionality is implemented:
 *****************************************************
 
 1. Create a new soft_delete app, whole code for soft-deletion functionality is implemented in its models.py file.
-2. An abstract ``SoftDeleteModel`` added which contains a ``deleted`` attribute which is a ``UUIDField``. It will hold ``None`` for undeleted object and a new ``uuid4`` for deleted objects.
-3. ``SoftDeleteQuerySet`` implemented to override default django's ``delete`` method to ``soft-delete`` objects instead of hard deleting them.
+2. Added an abstract ``SoftDeleteModel`` which contains a ``deleted`` attribute which is a ``UUIDField``. It will hold ``None`` for undeleted object and a new ``uuid4`` for deleted objects.
+3. Implemented a ``SoftDeleteQuerySet`` to override default django's ``delete`` method to ``soft-delete`` objects instead of hard deleting them.
 4. ``undelete()``, ``hard_delete()``, ``only_deleted()`` methods are implemented in same QuerySet class to provide extra features.
 5. ``SoftDeleteManger`` implemented to use above QuerySet by overriding ``get_queryset()`` method.
 6. QuerySet's delete method is necessary to override to support ``bulk_delete`` feature.
