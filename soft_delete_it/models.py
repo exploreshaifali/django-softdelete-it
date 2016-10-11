@@ -32,7 +32,7 @@ class SoftDeleteHelper():
         soft-deleted'''
         for model, instances in collector.data.items():
             try:
-                if model._meta.get_field_by_name("deleted"):
+                if model._meta.get_field("deleted"):
                     collector.data[model] = set(filter(lambda x: not x.deleted,
                                                 instances))
             except FieldDoesNotExist:
