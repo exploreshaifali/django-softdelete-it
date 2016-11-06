@@ -18,7 +18,7 @@ Follow steps mentioned below to add ``soft-delete`` feature in any model of your
          ]
 3. Import ``SoftDeleteModel`` from soft_delete_it app to your model file like this: ::
 
-      from soft_delete_it import SoftDeleteModel
+      from soft_delete_it.models import SoftDeleteModel
 
 4. Inherit ``SoftDeleteModel`` class to your model class. It will add following features:
     - ``objects`` manager's behavior will change such that:
