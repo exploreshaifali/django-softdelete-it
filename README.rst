@@ -2,7 +2,7 @@
 django-softdelete-it
 ***********************
 
-Add soft-delete functionality to desired models.
+Add soft-delete functionality to desired models | with undelete support.
 
 Quick start
 ############
